@@ -13,9 +13,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-
-public class User {
-	private long id;
+public class User extends Entity {
 	@NotBlank
 	@Email
 	private String email;

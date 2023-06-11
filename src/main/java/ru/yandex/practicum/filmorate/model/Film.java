@@ -13,9 +13,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-
-public class Film {
-	private long id;
+public class Film extends Entity {
 	@NotBlank
 	private String name;
 	@Size(max = 200)

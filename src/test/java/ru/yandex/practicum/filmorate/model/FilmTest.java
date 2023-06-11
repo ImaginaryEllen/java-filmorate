@@ -48,7 +48,7 @@ class FilmTest {
 		Film film = new Film();
 		film.setName("Interstellar");
 		film.setDuration(169);
-		film.setDescription("In 2067, humanity is facing global extinction...");
+		film.setDescription("d".repeat(100));
 		Set<ConstraintViolation<Film>> validates = validator.validate(film);
 		assertEquals(0, validates.size(),
 				"Film description validate is not correct: expected - 0, actual -" + validates.size());
@@ -59,9 +59,7 @@ class FilmTest {
 		Film film = new Film();
 		film.setName("Interstellar");
 		film.setDuration(169);
-		film.setDescription("In 2067, humanity is facing global extinction following a global famine, " +
-				"and has abandoned scientific pursuits such as space exploration." +
-				"The ex-NASA pilot Joseph Cooper is forced to work as a farmer...");
+		film.setDescription("d".repeat(201));
 		Set<ConstraintViolation<Film>> validates = validator.validate(film);
 		assertEquals(1, validates.size(),
 				"Film description validate is not correct: expected - 1, actual -" + validates.size());
