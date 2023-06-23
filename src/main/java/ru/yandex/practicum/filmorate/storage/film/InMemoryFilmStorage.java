@@ -66,10 +66,10 @@ public class InMemoryFilmStorage implements FilmStorage {
 				if (likeSize != 0) {
 					sorted.put(likeSize, filmId);
 				return sorted.values().stream()
-						.map(id -> films.get(id)).collect(Collectors.toCollection(() -> new ArrayList<>(count)));
+						.map(id -> films.get(id)).limit(count).collect(Collectors.toList());
 				}
 			}
 		}
-		return new ArrayList<>(films.values());
+		return films.values().stream().limit(count).collect(Collectors.toList());
 	}
 }

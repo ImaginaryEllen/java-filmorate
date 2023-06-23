@@ -61,10 +61,7 @@ public class FilmController {
 	}
 
 	@GetMapping("/popular")
-	public List<Film> getCommonFriend(@RequestParam(required = false) Integer count) {
-		if (count != null) {
-			return service.getPopularFilms(count);
-		}
-		return service.getPopularFilms(10);
+	public List<Film> getCommonFriend(@RequestParam(defaultValue = "10") int count) {
+		return service.getPopularFilms(count);
 	}
 }
