@@ -6,17 +6,19 @@ import java.util.List;
 
 public interface FilmService {
 
-	Film create(Film film);
+    Film create(Film film);
 
-	Film update(Film film);
+    Film update(Film film);
 
-	List<Film> getList();
+    List<Film> getList();
 
-	void addLike(long filmId, long userId);
+    void addLike(Long filmId, Long userId);
 
-	void deleteLike(long filmId, long userId);
+    void deleteLike(Long filmId, Long userId);
 
-	List<Film> getPopularFilms(int count);
+    List<Film> getPopularFilms(int count);
 
-	Film getById(long id);
+    Film getById(Long id);
+
+    void addGenresToFilm(Long filmId, Long genreId);
 }
