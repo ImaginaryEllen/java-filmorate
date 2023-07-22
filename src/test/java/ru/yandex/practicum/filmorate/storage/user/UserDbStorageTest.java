@@ -10,12 +10,14 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+
 @JdbcTest
 @Import(UserDbStorage.class)
 class UserDbStorageTest {
 
     @Autowired
     private UserStorage userStorage;
+
     @Test
     void shouldCreateUser() {
         User user = userStorage.create(new User("anna@mail.com", "fanny", "Anna",
@@ -94,7 +96,7 @@ class UserDbStorageTest {
 
     @Test
     void shouldAddFriendToUser() {
-        userStorage.addFriend(5L,1L);
+        userStorage.addFriend(5L, 1L);
 
         List<User> friends = userStorage.getFriends(5L);
         assertNotNull(friends, "Return empty friends list");
