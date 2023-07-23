@@ -75,7 +75,7 @@ public class BaseFilmService implements FilmService {
     }
 
     private void validationLike(Long filmId, Long userId) {
-        if (userStorage.getById(userId) == null) {
+        if (userStorage.getById(userId).isEmpty()) {
             throw new NotFoundException("User with ID: " + userId + " not found");
         }
         if (filmStorage.getById(filmId) == null) {

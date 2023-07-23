@@ -20,10 +20,7 @@ public class BaseRatingService implements RatingService {
 
     @Override
     public Rating getRatingById(Long id) {
-        Rating rating = ratingStorage.getRatingById(id);
-        if (rating == null) {
-            throw new NotFoundException("Rating with ID: " + id + " not found");
-        }
-        return rating;
+        return ratingStorage.getRatingById(id).orElseThrow(
+                () -> new NotFoundException("Rating with ID: " + id + " not found"));
     }
 }

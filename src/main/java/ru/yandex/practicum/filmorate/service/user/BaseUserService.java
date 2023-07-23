@@ -16,10 +16,8 @@ public class BaseUserService implements UserService {
 
     @Override
     public User create(User user) {
-        final User newUser = storage.create(user);
-        if (storage.getById(newUser.getId()) == null) {
-            throw new NotFoundException("Create ERROR user : " + user);
-        }
+        User newUser = storage.create(user);
+        validationUser(newUser.getId());
         return newUser;
     }
 
@@ -54,32 +52,30 @@ public class BaseUserService implements UserService {
 
     @Override
     public List<User> getFriend(Long id) {
-        validationUser(id);
         return storage.getFriends(id);
     }
 
     @Override
     public User getById(Long id) {
-        validationUser(id);
-        return storage.getById(id);
-    }
-
-    private void validationFriends(Long userId, Long friendId) {
-        if (userId.equals(friendId)) {
-            throw new IncorrectArgumentException(
-                    "User ID: " + userId + "cannot equals friend ID: " + friendId);
-        }
-        if (storage.getById(userId) == null) {
-            throw new NotFoundException("User with ID: " + userId + " not found");
-        }
-        if (storage.getById(friendId) == null) {
-            throw new NotFoundException("User friend with ID: " + friendId + " not found");
-        }
+        return storage.getById(id).orElseThrow(() -> new NotFoundException("User with ID: " + id + " not found"));
     }
 
     private void validationUser(Long id) {
-        if (storage.getById(id) == null) {
+        if (storage.getById(id).isEmpty() || id <= 0) {
             throw new NotFoundException("User with ID: " + id + " not found");
+        }
+    }
+
+    private void validationFriends(Long userId, Long friendId) {
+        if (storage.getById(userId).isEmpty() || userId <= 0) {
+            throw new NotFoundException("User with ID: " + userId + " not found");
+        }
+        if (storage.getById(friendId).isEmpty() || friendId <= 0) {
+            throw new NotFoundException("User with ID: " + friendId + " not found");
+        }
+        if (userId.equals(friendId)) {
+            throw new IncorrectArgumentException(
+                    "User ID: " + userId + "cannot equals friend ID: " + friendId);
         }
     }
 }

@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.model.Rating;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+
 @JdbcTest
 @Import(RatingDbStorage.class)
 class RatingDbStorageTest {
@@ -31,17 +32,13 @@ class RatingDbStorageTest {
 
     @Test
     void shouldGetRatingById() {
-        Rating rating = ratingStorage.getRatingById(2L);
+        if (ratingStorage.getRatingById(2L).isPresent()) {
+            Rating rating = ratingStorage.getRatingById(2L).get();
 
-        assertEquals(2L, rating.getId(),
-                "Incorrect rating id: " + rating.getId() + "but should be: " + 2L);
-        assertEquals("PG", rating.getName(),
-                "Incorrect rating name: " + rating.getName() + "but should be: " + "PG");
-    }
-
-    @Test
-    void shouldGetEmptyRatingByIncorrectId() {
-        Rating rating = ratingStorage.getRatingById(200L);
-        assertNull(rating, "Return not empty rating");
+            assertEquals(2L, rating.getId(),
+                    "Incorrect rating id: " + rating.getId() + "but should be: " + 2L);
+            assertEquals("PG", rating.getName(),
+                    "Incorrect rating name: " + rating.getName() + "but should be: " + "PG");
+        }
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Import;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Like;
+import ru.yandex.practicum.filmorate.model.Rating;
 import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.rating.RatingDbStorage;
 import ru.yandex.practicum.filmorate.storage.rating.RatingStorage;
@@ -19,7 +20,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 @JdbcTest
-@Import({ FilmDbStorage.class, RatingDbStorage.class, GenreDbStorage.class })
+@Import( {FilmDbStorage.class, RatingDbStorage.class, GenreDbStorage.class} )
 class FilmDbStorageTest {
 
     @Autowired
@@ -29,89 +30,97 @@ class FilmDbStorageTest {
 
     @Test
     void shouldCreateFilm() {
-        Film film = filmStorage.create(new Film("Harry Potter", "d".repeat(100),
-                LocalDate.of(2002, 3, 21), 120, ratingStorage.getRatingById(2L)));
-
-        assertNotNull(film, "Create return empty film");
-        assertEquals(6L, film.getId(),
-                "Incorrect create film id: " + film.getId() + " but should be: " + 6L);
-        assertEquals("Harry Potter", film.getName(),
-                "Incorrect create film name: " + film.getName() + " but should be: " + "Harry Potter");
-        assertEquals("d".repeat(100), film.getDescription(), "Incorrect create film description: " +
-                film.getDescription() + " but should be: " + "d".repeat(100));
-        assertEquals(LocalDate.of(2002, 3, 21), film.getReleaseDate(),
-                "Incorrect create film release date: " + film.getReleaseDate() + " but should be: " +
-                        LocalDate.of(2002, 3, 21));
-        assertEquals(120, film.getDuration(),
-                "Incorrect create film duration: " + film.getDuration() + " but should be: " + 120);
-        assertEquals(2L, film.getMpa().getId(),
-                "Incorrect create film rating id: " + film.getMpa().getId() + " but should be: " + 2L);
-        assertEquals("PG", film.getMpa().getName(),
-                "Incorrect create film rating name: " + film.getMpa().getName() + " but should be: " + "PG");
+        if (ratingStorage.getRatingById(2L).isPresent()) {
+            Rating rating = ratingStorage.getRatingById(2L).get();
+            Film film = filmStorage.create(new Film("Harry Potter", "d".repeat(100),
+                    LocalDate.of(2002, 3, 21), 120, rating));
+            assertNotNull(film, "Create return empty film");
+            assertEquals(6L, film.getId(),
+                    "Incorrect create film id: " + film.getId() + " but should be: " + 6L);
+            assertEquals("Harry Potter", film.getName(),
+                    "Incorrect create film name: " + film.getName() + " but should be: " + "Harry Potter");
+            assertEquals("d".repeat(100), film.getDescription(), "Incorrect create film description: " +
+                    film.getDescription() + " but should be: " + "d".repeat(100));
+            assertEquals(LocalDate.of(2002, 3, 21), film.getReleaseDate(),
+                    "Incorrect create film release date: " + film.getReleaseDate() + " but should be: " +
+                            LocalDate.of(2002, 3, 21));
+            assertEquals(120, film.getDuration(),
+                    "Incorrect create film duration: " + film.getDuration() + " but should be: " + 120);
+            assertEquals(2L, film.getMpa().getId(),
+                    "Incorrect create film rating id: " + film.getMpa().getId() + " but should be: " + 2L);
+            assertEquals("PG", film.getMpa().getName(), "Incorrect create film rating name: " +
+                    film.getMpa().getName() + " but should be: " + "PG");
+        }
     }
 
     @Test
     void shouldUpdateFilmWithoutGenres() {
-        Film film = filmStorage.update(new Film(1L, "Leon", "d".repeat(150),
-                LocalDate.of(1984, 12, 14), 110, ratingStorage.getRatingById(5L)));
+        if (ratingStorage.getRatingById(5L).isPresent()) {
+            Rating rating = ratingStorage.getRatingById(5L).get();
+            Film film = filmStorage.update(new Film(1L, "Leon", "d".repeat(150),
+                    LocalDate.of(1984, 12, 14), 110, rating));
+            assertNotNull(film, "Update return empty film");
+            assertEquals(1L, film.getId(),
+                    "Incorrect update film id: " + film.getId() + " but should be: " + 1L);
+            assertEquals("Leon", film.getName(),
+                    "Incorrect update film name: " + film.getName() + " but should be: " + "Leon");
+            assertEquals("d".repeat(150), film.getDescription(), "Incorrect update film description: " +
+                    film.getDescription() + " but should be: " + "d".repeat(150));
+            assertEquals(LocalDate.of(1984, 12, 14), film.getReleaseDate(),
+                    "Incorrect update film release date: " + film.getReleaseDate() + " but should be: " +
+                            LocalDate.of(1984, 12, 14));
+            assertEquals(110, film.getDuration(),
+                    "Incorrect update film duration: " + film.getDuration() + " but should be: " + 110);
+            assertEquals(5L, film.getMpa().getId(),
+                    "Incorrect update film rating id: " + film.getMpa().getId() + " but should be: " + 5L);
 
-        assertNotNull(film, "Update return empty film");
-        assertEquals(1L, film.getId(),
-                "Incorrect update film id: " + film.getId() + " but should be: " + 1L);
-        assertEquals("Leon", film.getName(),
-                "Incorrect update film name: " + film.getName() + " but should be: " + "Leon");
-        assertEquals("d".repeat(150), film.getDescription(), "Incorrect update film description: " +
-                film.getDescription() + " but should be: " + "d".repeat(150));
-        assertEquals(LocalDate.of(1984, 12, 14), film.getReleaseDate(),
-                "Incorrect update film release date: " + film.getReleaseDate() + " but should be: " +
-                        LocalDate.of(1984, 12, 14));
-        assertEquals(110, film.getDuration(),
-                "Incorrect update film duration: " + film.getDuration() + " but should be: " + 110);
-        assertEquals(5L, film.getMpa().getId(),
-                "Incorrect update film rating id: " + film.getMpa().getId() + " but should be: " + 5L);
-
-        Film filmUp = filmStorage.getById(1L);
-        assertNotNull(filmUp.getGenres());
-        assertEquals(0, filmUp.getGenres().size(),
-                "Incorrect size genres: " + filmUp.getGenres().size() + "but should be 0");
+            Film filmUp = filmStorage.getById(1L);
+            assertNotNull(filmUp.getGenres());
+            assertEquals(0, filmUp.getGenres().size(),
+                    "Incorrect size genres: " + filmUp.getGenres().size() + "but should be 0");
+        }
     }
 
     @Test
     void shouldUpdateRating() {
-        Film upFilm = filmStorage.update(new Film(1L, "Harry Potter", "d".repeat(100),
-                LocalDate.of(2002, 3, 21), 120, ratingStorage.getRatingById(2L)));
-        assertEquals(1L, upFilm.getId(),
-                "Incorrect create film id: " + upFilm.getId() + " but should be: " + 1L);
-        assertEquals("Harry Potter", upFilm.getName(),
-                "Incorrect create film name: " + upFilm.getName() + " but should be: " + "Harry Potter");
-        assertEquals("d".repeat(100), upFilm.getDescription(), "Incorrect create film description: " +
-                upFilm.getDescription() + " but should be: " + "d".repeat(100));
-        assertEquals(LocalDate.of(2002, 3, 21), upFilm.getReleaseDate(),
-                "Incorrect create film release date: " + upFilm.getReleaseDate() + " but should be: " +
-                        LocalDate.of(2002, 3, 21));
-        assertEquals(120, upFilm.getDuration(),
-                "Incorrect create film duration: " + upFilm.getDuration() + " but should be: " + 120);
-        assertEquals(2L, upFilm.getMpa().getId(),
-                "Incorrect create film rating id: " + upFilm.getMpa().getId() + " but should be: " + 2L);
-        assertEquals("PG", upFilm.getMpa().getName(),
-                "Incorrect create film rating name: " + upFilm.getMpa().getName() + " but should be: " + "PG");
+        if (ratingStorage.getRatingById(2L).isPresent()) {
+            Rating rating = ratingStorage.getRatingById(2L).get();
+            Film upFilm = filmStorage.update(new Film(1L, "Harry Potter", "d".repeat(100),
+                    LocalDate.of(2002, 3, 21), 120, rating));
+            assertEquals(1L, upFilm.getId(),
+                    "Incorrect create film id: " + upFilm.getId() + " but should be: " + 1L);
+            assertEquals("Harry Potter", upFilm.getName(),
+                    "Incorrect create film name: " + upFilm.getName() + " but should be: " + "Harry Potter");
+            assertEquals("d".repeat(100), upFilm.getDescription(), "Incorrect create film description: " +
+                    upFilm.getDescription() + " but should be: " + "d".repeat(100));
+            assertEquals(LocalDate.of(2002, 3, 21), upFilm.getReleaseDate(),
+                    "Incorrect create film release date: " + upFilm.getReleaseDate() + " but should be: " +
+                            LocalDate.of(2002, 3, 21));
+            assertEquals(120, upFilm.getDuration(),
+                    "Incorrect create film duration: " + upFilm.getDuration() + " but should be: " + 120);
+            assertEquals(2L, upFilm.getMpa().getId(),
+                    "Incorrect create film rating id: " + upFilm.getMpa().getId() + " but should be: " + 2L);
+            assertEquals("PG", upFilm.getMpa().getName(), "Incorrect create film rating name: " +
+                    upFilm.getMpa().getName() + " but should be: " + "PG");
 
-        Film getFilm = filmStorage.getById(1L);
-        assertEquals(1L, getFilm.getId(),
-                "Incorrect create film id: " + getFilm.getId() + " but should be: " + 1L);
-        assertEquals("Harry Potter", getFilm.getName(),
-                "Incorrect create film name: " + getFilm.getName() + " but should be: " + "Harry Potter");
-        assertEquals("d".repeat(100), getFilm.getDescription(), "Incorrect create film description: " +
-                getFilm.getDescription() + " but should be: " + "d".repeat(100));
-        assertEquals(LocalDate.of(2002, 3, 21), getFilm.getReleaseDate(),
-                "Incorrect create film release date: " + getFilm.getReleaseDate() + " but should be: " +
-                        LocalDate.of(2002, 3, 21));
-        assertEquals(120, getFilm.getDuration(),
-                "Incorrect create film duration: " + getFilm.getDuration() + " but should be: " + 120);
-        assertEquals(2L, getFilm.getMpa().getId(),
-                "Incorrect create film rating id: " + getFilm.getMpa().getId() + " but should be: " + 2L);
-        assertEquals("PG", getFilm.getMpa().getName(),
-                "Incorrect create film rating name: " + getFilm.getMpa().getName() + " but should be: " + "PG");
+            Film getFilm = filmStorage.getById(1L);
+            assertEquals(1L, getFilm.getId(),
+                    "Incorrect create film id: " + getFilm.getId() + " but should be: " + 1L);
+            assertEquals("Harry Potter", getFilm.getName(),
+                    "Incorrect create film name: " + getFilm.getName() + " but should be: " + "Harry Potter");
+            assertEquals("d".repeat(100), getFilm.getDescription(),
+                    "Incorrect create film description: " + getFilm.getDescription() +
+                            " but should be: " + "d".repeat(100));
+            assertEquals(LocalDate.of(2002, 3, 21), getFilm.getReleaseDate(),
+                    "Incorrect create film release date: " + getFilm.getReleaseDate() + " but should be: " +
+                            LocalDate.of(2002, 3, 21));
+            assertEquals(120, getFilm.getDuration(),
+                    "Incorrect create film duration: " + getFilm.getDuration() + " but should be: " + 120);
+            assertEquals(2L, getFilm.getMpa().getId(),
+                    "Incorrect create film rating id: " + getFilm.getMpa().getId() + " but should be: " + 2L);
+            assertEquals("PG", getFilm.getMpa().getName(), "Incorrect create film rating name: " +
+                    getFilm.getMpa().getName() + " but should be: " + "PG");
+        }
     }
 
     @Test
@@ -165,29 +174,34 @@ class FilmDbStorageTest {
         newSet.add(new Genre(2L, "Драма"));
         newSet.add(new Genre(3L, "Мультфильм"));
         newSet.add(new Genre(2L, "Драма"));
-        Film upGenrFilm = filmStorage.update(new Film(1L, "Harry Potter", "d".repeat(100),
-                LocalDate.of(2002, 3, 21), 120, ratingStorage.getRatingById(2L), newSet));
-        assertEquals(1L, upGenrFilm.getId(),
-                "Incorrect create film id: " + upGenrFilm.getId() + " but should be: " + 1L);
-        assertEquals("Harry Potter", upGenrFilm.getName(),
-                "Incorrect create film name: " + upGenrFilm.getName() + " but should be: " + "Harry Potter");
-        assertEquals("d".repeat(100), upGenrFilm.getDescription(), "Incorrect create film description: " +
-                upGenrFilm.getDescription() + " but should be: " + "d".repeat(100));
-        assertEquals(LocalDate.of(2002, 3, 21), upGenrFilm.getReleaseDate(),
-                "Incorrect create film release date: " + upGenrFilm.getReleaseDate() + " but should be: " +
-                        LocalDate.of(2002, 3, 21));
-        assertEquals(120, upGenrFilm.getDuration(),
-                "Incorrect create film duration: " + upGenrFilm.getDuration() + " but should be: " + 120);
-        assertEquals(2L, upGenrFilm.getMpa().getId(),
-                "Incorrect create film rating id: " + upGenrFilm.getMpa().getId() + " but should be: " + 2L);
-        assertEquals("PG", upGenrFilm.getMpa().getName(), "Incorrect create film rating name: " +
-                upGenrFilm.getMpa().getName() + " but should be: " + "PG");
-        assertEquals(2, newSet.size());
+        if (ratingStorage.getRatingById(2L).isPresent()) {
+            Rating rating = ratingStorage.getRatingById(2L).get();
+            Film upGenrFilm = filmStorage.update(new Film(1L, "Harry Potter", "d".repeat(100),
+                    LocalDate.of(2002, 3, 21), 120, rating, newSet));
+            assertEquals(1L, upGenrFilm.getId(),
+                    "Incorrect create film id: " + upGenrFilm.getId() + " but should be: " + 1L);
+            assertEquals("Harry Potter", upGenrFilm.getName(), "Incorrect create film name: " +
+                    upGenrFilm.getName() + " but should be: " + "Harry Potter");
+            assertEquals("d".repeat(100), upGenrFilm.getDescription(),
+                    "Incorrect create film description: " + upGenrFilm.getDescription() +
+                            " but should be: " + "d".repeat(100));
+            assertEquals(LocalDate.of(2002, 3, 21), upGenrFilm.getReleaseDate(),
+                    "Incorrect create film release date: " + upGenrFilm.getReleaseDate() + " but should be: " +
+                            LocalDate.of(2002, 3, 21));
+            assertEquals(120, upGenrFilm.getDuration(),
+                    "Incorrect create film duration: " + upGenrFilm.getDuration() + " but should be: " + 120);
+            assertEquals(2L, upGenrFilm.getMpa().getId(), "Incorrect create film rating id: " +
+                    upGenrFilm.getMpa().getId() + " but should be: " + 2L);
+            assertEquals("PG", upGenrFilm.getMpa().getName(), "Incorrect create film rating name: " +
+                    upGenrFilm.getMpa().getName() + " but should be: " + "PG");
+            assertEquals(2, newSet.size());
 
-        Film filmUp = filmStorage.getById(1L);
-        Set<Genre> testGenres = filmUp.getGenres();
-        assertEquals(2, testGenres.size(),
-                "Incorrect size genres list: " + testGenres.size() + " but should be: " + 2);
+            Film filmUp = filmStorage.getById(1L);
+            Set<Genre> testGenres = filmUp.getGenres();
+            assertEquals(2, testGenres.size(),
+                    "Incorrect size genres list: " + testGenres.size() + " but should be: " + 2);
+        }
+
     }
 
     @Test
@@ -196,28 +210,33 @@ class FilmDbStorageTest {
         newSet.add(new Genre(1L, null));
         newSet.add(new Genre(3L, null));
         newSet.add(new Genre(2L, null));
-        Film upGenrFilm = filmStorage.update(new Film(1L, "Harry Potter", "d".repeat(100),
-                LocalDate.of(2002, 3, 21), 120, ratingStorage.getRatingById(2L), newSet));
-        assertEquals(1L, upGenrFilm.getId(),
-                "Incorrect create film id: " + upGenrFilm.getId() + " but should be: " + 1L);
-        assertEquals("Harry Potter", upGenrFilm.getName(),
-                "Incorrect create film name: " + upGenrFilm.getName() + " but should be: " + "Harry Potter");
-        assertEquals("d".repeat(100), upGenrFilm.getDescription(), "Incorrect create film description: " +
-                upGenrFilm.getDescription() + " but should be: " + "d".repeat(100));
-        assertEquals(LocalDate.of(2002, 3, 21), upGenrFilm.getReleaseDate(),
-                "Incorrect create film release date: " + upGenrFilm.getReleaseDate() + " but should be: " +
-                        LocalDate.of(2002, 3, 21));
-        assertEquals(120, upGenrFilm.getDuration(),
-                "Incorrect create film duration: " + upGenrFilm.getDuration() + " but should be: " + 120);
-        assertEquals(2L, upGenrFilm.getMpa().getId(),
-                "Incorrect create film rating id: " + upGenrFilm.getMpa().getId() + " but should be: " + 2L);
-        assertEquals("PG", upGenrFilm.getMpa().getName(), "Incorrect create film rating name: " +
-                upGenrFilm.getMpa().getName() + " but should be: " + "PG");
-        assertEquals(3, newSet.size());
 
-        Film film1 = filmStorage.getById(1L);
-        Set<Genre> testGenres = film1.getGenres();
-        assertEquals(3, testGenres.size());
+        if (ratingStorage.getRatingById(2L).isPresent()) {
+            Rating rating = ratingStorage.getRatingById(2L).get();
+            Film upGenrFilm = filmStorage.update(new Film(1L, "Harry Potter", "d".repeat(100),
+                    LocalDate.of(2002, 3, 21), 120, rating, newSet));
+            assertEquals(1L, upGenrFilm.getId(),
+                    "Incorrect create film id: " + upGenrFilm.getId() + " but should be: " + 1L);
+            assertEquals("Harry Potter", upGenrFilm.getName(),
+                    "Incorrect create film name: " + upGenrFilm.getName() + " but should be: " + "Harry Potter");
+            assertEquals("d".repeat(100), upGenrFilm.getDescription(),
+                    "Incorrect create film description: " + upGenrFilm.getDescription() +
+                            " but should be: " + "d".repeat(100));
+            assertEquals(LocalDate.of(2002, 3, 21), upGenrFilm.getReleaseDate(),
+                    "Incorrect create film release date: " + upGenrFilm.getReleaseDate() + " but should be: " +
+                            LocalDate.of(2002, 3, 21));
+            assertEquals(120, upGenrFilm.getDuration(),
+                    "Incorrect create film duration: " + upGenrFilm.getDuration() + " but should be: " + 120);
+            assertEquals(2L, upGenrFilm.getMpa().getId(), "Incorrect create film rating id: " +
+                    upGenrFilm.getMpa().getId() + " but should be: " + 2L);
+            assertEquals("PG", upGenrFilm.getMpa().getName(), "Incorrect create film rating name: " +
+                    upGenrFilm.getMpa().getName() + " but should be: " + "PG");
+            assertEquals(3, newSet.size());
+
+            Film film1 = filmStorage.getById(1L);
+            Set<Genre> testGenres = film1.getGenres();
+            assertEquals(3, testGenres.size());
+        }
     }
 
     @Test

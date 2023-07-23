@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Repository
 public class RatingDbStorage implements RatingStorage {
@@ -25,13 +26,13 @@ public class RatingDbStorage implements RatingStorage {
     }
 
     @Override
-    public Rating getRatingById(Long id) {
+    public Optional<Rating> getRatingById(Long id) {
         final String sqlQuery = "select * from ratings where rating_id = :rating_id ";
         final List<Rating> ratings = jdbcOperations.query(sqlQuery, Map.of("rating_id", id), new RatingRowMapper());
         if (ratings.size() != 1) {
-            return null;
+            return Optional.empty();
         }
-        return ratings.get(0);
+        return Optional.of(ratings.get(0));
     }
 
     private static class RatingRowMapper implements RowMapper<Rating> {

@@ -38,13 +38,8 @@ public class FilmDbStorage implements FilmStorage {
     public Film create(Film film) {
         final String sqlQuery = "insert into films(name, description, release_date, duration, rating_id) " +
                 "values (:name, :description, :release_date, :duration, :rating_id) ";
+        MapSqlParameterSource map = createFilmParam(film);
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        MapSqlParameterSource map = new MapSqlParameterSource();
-        map.addValue("name", film.getName());
-        map.addValue("description", film.getDescription());
-        map.addValue("release_date", film.getReleaseDate());
-        map.addValue("duration", film.getDuration());
-        map.addValue("rating_id", film.getMpa().getId());
         jdbcOperations.update(sqlQuery, map, keyHolder);
         film.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
         saveGenre(film);
@@ -57,13 +52,7 @@ public class FilmDbStorage implements FilmStorage {
         final String sqlQuery = "update films set name = :name, description = :description, " +
                 "release_date = :release_date, duration = :duration, rating_id = :rating_id " +
                 "where film_id = :id ";
-        MapSqlParameterSource map = new MapSqlParameterSource();
-        map.addValue("id", film.getId());
-        map.addValue("name", film.getName());
-        map.addValue("description", film.getDescription());
-        map.addValue("release_date", film.getReleaseDate());
-        map.addValue("duration", film.getDuration());
-        map.addValue("rating_id", film.getMpa().getId());
+        MapSqlParameterSource map = createFilmParam(film);
         jdbcOperations.update(sqlQuery, map);
         film.setMpa(ratingService.getRatingById(film.getMpa().getId()));
         saveGenre(film);
@@ -131,8 +120,9 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getPopularFilms(int count) {
-        if (getList().size() < count) {
-            count = getList().size();
+        final List<Film> filmList = getList();
+        if (filmList.size() < count) {
+            count = filmList.size();
         }
         final String sqlQuery = "select f.film_id, name, description, release_date, duration, rating_id " +
                 "from films as f " +
@@ -166,19 +156,41 @@ public class FilmDbStorage implements FilmStorage {
         return jdbcOperations.queryForList(sqlQuery, map, Long.class);
     }
 
-    private void saveGenre(Film film) {
-        deleteGenreByFilm(film.getId());
-        for (Genre genre : film.getGenres()) {
-            genre.setName(genreService.getGenreById(genre.getId()).getName());
-            addGenreToFilm(film.getId(), genre.getId());
-            film.setGenres(getGenresByFilmId(film.getId()));
+    private MapSqlParameterSource createFilmParam(Film film) {
+        MapSqlParameterSource map = new MapSqlParameterSource();
+        if (film.getId() != null) {
+            map.addValue("id", film.getId());
         }
+        map.addValue("name", film.getName());
+        map.addValue("description", film.getDescription());
+        map.addValue("release_date", film.getReleaseDate());
+        map.addValue("duration", film.getDuration());
+        map.addValue("rating_id", film.getMpa().getId());
+        return map;
     }
 
-    private void deleteGenreByFilm(Long id) {
-        final String sqlQuery = "delete from film_genres where film_id = :film_id ";
+    private void saveGenre(Film film) {
+        final List<Long> genreIds = getGenresIdByFilm(film.getId()); // список id жанров фильма из таблицы
+        final Set<Genre> genreByFilm = film.getGenres(); // список жанров, который пришел в update
+        // если обновленный список не содержит больше этого жанра - удаляем его из таблицы
+        genreIds.stream()
+                .filter(id -> !genreByFilm.contains(genreService.getGenreById(id)))
+                .forEach(id -> deleteGenreByFilm(film.getId(), id));
+        // обновляем имя жанра по id (если оно некорректное)
+        genreByFilm.forEach(genre -> {
+            genre.setName(genreService.getGenreById(genre.getId()).getName());
+            if (!genreIds.contains(genre.getId())) { // проверяем есть ли уже жанр (из update) у фильма в таблице
+                addGenreToFilm(film.getId(), genre.getId()); // если нет - добавляем в таблицу новый жанр
+            }
+        });
+        film.setGenres(getGenresByFilmId(film.getId())); // обновляем данные жанров по фильму
+    }
+
+    private void deleteGenreByFilm(Long filmId, Long genreId) {
+        final String sqlQuery = "delete from film_genres where film_id = :film_id and genre_id = :genre_id ";
         MapSqlParameterSource map = new MapSqlParameterSource();
-        map.addValue("film_id", id);
+        map.addValue("film_id", filmId);
+        map.addValue("genre_id", genreId);
         jdbcOperations.update(sqlQuery, map);
     }
 

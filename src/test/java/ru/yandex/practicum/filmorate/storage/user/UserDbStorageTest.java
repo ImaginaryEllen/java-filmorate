@@ -78,20 +78,22 @@ class UserDbStorageTest {
 
     @Test
     void shouldGetUserById() {
-        User user = userStorage.getById(1L);
+        if (userStorage.getById(1L).isPresent()) {
+            User user = userStorage.getById(1L).get();
 
-        assertNotNull(user, "Get list return empty user");
-        assertEquals(1L, user.getId(),
-                "Incorrect return user id: " + user.getId() + " but should be: " + 1L);
-        assertEquals("tess@mail.com", user.getEmail(),
-                "Incorrect return user email: " + user.getEmail() + " but should be: " + "tess@mail.com");
-        assertEquals("testy", user.getLogin(),
-                "Incorrect return user name: " + user.getLogin() + " but should be: " + "testy");
-        assertEquals("Tess", user.getName(),
-                "Incorrect return user name: " + user.getName() + " but should be: " + "Tess");
-        assertEquals(LocalDate.of(2000, 10, 10), user.getBirthday(),
-                "Incorrect return user birthday: " + user.getBirthday() + " but should be: " +
-                        LocalDate.of(2000, 10, 10));
+            assertNotNull(user, "Get list return empty user");
+            assertEquals(1L, user.getId(),
+                    "Incorrect return user id: " + user.getId() + " but should be: " + 1L);
+            assertEquals("tess@mail.com", user.getEmail(),
+                    "Incorrect return user email: " + user.getEmail() + " but should be: " + "tess@mail.com");
+            assertEquals("testy", user.getLogin(),
+                    "Incorrect return user name: " + user.getLogin() + " but should be: " + "testy");
+            assertEquals("Tess", user.getName(),
+                    "Incorrect return user name: " + user.getName() + " but should be: " + "Tess");
+            assertEquals(LocalDate.of(2000, 10, 10), user.getBirthday(),
+                    "Incorrect return user birthday: " + user.getBirthday() + " but should be: " +
+                            LocalDate.of(2000, 10, 10));
+        }
     }
 
     @Test

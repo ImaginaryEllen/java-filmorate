@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 @Repository
 public class UserDbStorage implements UserStorage {
@@ -28,12 +29,8 @@ public class UserDbStorage implements UserStorage {
         user.setName(updateName(user.getName(), user.getLogin()));
         final String sqlQuery = "insert into users(email, login, name, birthday) " +
                 "values (:email, :login, :name, :birthday) ";
+        MapSqlParameterSource map = createUserParam(user);
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        MapSqlParameterSource map = new MapSqlParameterSource();
-        map.addValue("email", user.getEmail());
-        map.addValue("login", user.getLogin());
-        map.addValue("name", user.getName());
-        map.addValue("birthday", user.getBirthday());
         jdbcOperations.update(sqlQuery, map, keyHolder);
         user.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
         return user;
@@ -44,12 +41,7 @@ public class UserDbStorage implements UserStorage {
         user.setName(updateName(user.getName(), user.getLogin()));
         final String sqlQuery = "update users set email = :email, login = :login, name =:name, birthday = :birthday " +
                 "where user_id = :id ";
-        MapSqlParameterSource map = new MapSqlParameterSource();
-        map.addValue("id", user.getId());
-        map.addValue("email", user.getEmail());
-        map.addValue("login", user.getLogin());
-        map.addValue("name", user.getName());
-        map.addValue("birthday", user.getBirthday());
+        MapSqlParameterSource map = createUserParam(user);
         jdbcOperations.update(sqlQuery, map);
         return user;
     }
@@ -62,20 +54,20 @@ public class UserDbStorage implements UserStorage {
     }
 
     @Override
-    public User getById(Long id) {
+    public Optional<User> getById(Long id) {
         final String sqlQuery = "select user_id, email, login, name, birthday " +
                 "from users " +
                 "where user_id = :id ";
         final List<User> users = jdbcOperations.query(sqlQuery, Map.of("id", id), new UserRowMapper());
         if (users.size() != 1) {
-            return null;
+            return Optional.empty();
         }
-        return users.get(0);
+        return Optional.of(users.get(0));
     }
 
     @Override
     public void addFriend(Long userId, Long friendId) {
-        boolean status = friendship(userId, friendId);
+        boolean status = checkFriendship(userId, friendId);
         if (status) {
             updateFriendshipStatus(friendId, userId, true);
         }
@@ -90,7 +82,7 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public void deleteFriend(Long userId, Long friendId) {
-        boolean status = friendship(userId, friendId);
+        boolean status = checkFriendship(userId, friendId);
         if (status) {
             updateFriendshipStatus(friendId, userId, false);
         }
@@ -113,7 +105,7 @@ public class UserDbStorage implements UserStorage {
         MapSqlParameterSource map = new MapSqlParameterSource();
         map.addValue("user_id", userId);
         map.addValue("friend_id", friendId);
-        return jdbcOperations.query(sqlQuery, map, new UserRowMapper()); //проверка на null
+        return jdbcOperations.query(sqlQuery, map, new UserRowMapper());
     }
 
     @Override
@@ -125,14 +117,30 @@ public class UserDbStorage implements UserStorage {
         return jdbcOperations.query(sqlQuery, Map.of("user_id", id), new FriendRowMapper());
     }
 
-    private boolean friendship(Long userId, Long friendId) {
-        List<User> friends = getFriends(friendId);
-        for (User friend : friends) {
-            if (friend.getId().equals(userId)) {
-                return true;
-            }
+    private MapSqlParameterSource createUserParam(User user) {
+        MapSqlParameterSource map = new MapSqlParameterSource();
+        if (user.getId() != null) {
+            map.addValue("id", user.getId());
         }
-        return false;
+        map.addValue("email", user.getEmail());
+        map.addValue("login", user.getLogin());
+        map.addValue("name", user.getName());
+        map.addValue("birthday", user.getBirthday());
+        return map;
+    }
+
+    private boolean checkFriendship(Long userId, Long friendId) {
+        return findFriendship(userId, friendId).size() == findFriendship(friendId, userId).size();
+    }
+
+    private List<User> findFriendship(Long userId, Long friendId) {
+        final String sqlQuery = "select friend_id, email, login, name, birthday " +
+                "from friends as f inner join users as u on f.user_id = u.user_id " +
+                "where f.user_id = :user_id and f.friend_id = :friend_id ";
+        MapSqlParameterSource map = new MapSqlParameterSource();
+        map.addValue("user_id", userId);
+        map.addValue("friend_id", friendId);
+        return jdbcOperations.query(sqlQuery, map, new FriendRowMapper());
     }
 
     private String updateName(String name, String login) {
@@ -143,13 +151,26 @@ public class UserDbStorage implements UserStorage {
     }
 
     private void updateFriendshipStatus(Long userId, Long friendId, boolean status) {
-        final String sqlQuery = "update friends set user_id = :user_id, friend_id = :friend_id, status = :status " +
-                "where user_id = :user_id and friend_id = :friend_id ";
+        if (checkFriendshipInTable(userId, friendId, status)) {
+            final String sqlQuery = "update friends set user_id = :user_id, friend_id = :friend_id, status = :status " +
+                    "where user_id = :user_id and friend_id = :friend_id ";
+            MapSqlParameterSource map = new MapSqlParameterSource();
+            map.addValue("user_id", userId);
+            map.addValue("friend_id", friendId);
+            map.addValue("status", status);
+            jdbcOperations.update(sqlQuery, map);
+        }
+    }
+
+    private boolean checkFriendshipInTable(Long userId, Long friendId, boolean status) {
+        final String sqlQuery = "select friend_id, email, login, name, birthday from friends as f " +
+                "inner join users u on u.user_id = f.friend_id " +
+                "where f.user_id = :user_id and f.friend_id = :friend_id and status = :status ";
         MapSqlParameterSource map = new MapSqlParameterSource();
         map.addValue("user_id", userId);
         map.addValue("friend_id", friendId);
         map.addValue("status", status);
-        jdbcOperations.update(sqlQuery, map);
+        return jdbcOperations.query(sqlQuery, map, new FriendRowMapper()).size() == 1;
     }
 
     private static class UserRowMapper implements RowMapper<User> {
