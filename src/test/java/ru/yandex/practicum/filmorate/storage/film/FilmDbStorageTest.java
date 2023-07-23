@@ -20,7 +20,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 @JdbcTest
-@Import( {FilmDbStorage.class, RatingDbStorage.class, GenreDbStorage.class} )
+@Import({ FilmDbStorage.class, RatingDbStorage.class, GenreDbStorage.class })
 class FilmDbStorageTest {
 
     @Autowired
